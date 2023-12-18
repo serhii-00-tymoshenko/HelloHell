@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Notes</string>
+
+    <string name="temp_images_dir">temp_images</string>
+    <string name="temp_image">temp_image.jpg</string>
+    <string name="authorities">com.mintokoneko.notes</string>
+
+    <string name="note_item_image_description">Note item image</string>
+    <string name="icon_camera_description">Icon camera</string>
+</resources>
