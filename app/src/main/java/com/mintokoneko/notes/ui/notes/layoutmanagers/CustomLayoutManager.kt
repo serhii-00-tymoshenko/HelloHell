@@ -7,17 +7,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
 
-
 class CustomLayoutManager(
     private val viewSize: Int,
     private val childPadding: Int,
     private val columnCount: Int,
 ) : RecyclerView.LayoutManager() {
-
-    class LayoutParams : RecyclerView.LayoutParams {
-        constructor(width: Int, height: Int) : super(width, height)
-        constructor(source: ViewGroup.MarginLayoutParams) : super(source)
-    }
 
     private val parentTop: Int
         get() = paddingTop
@@ -34,18 +28,7 @@ class CustomLayoutManager(
     private val viewSizeQuarter = viewSize / 4
 
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams =
-        LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT)
-
-    override fun generateLayoutParams(lp: ViewGroup.LayoutParams): RecyclerView.LayoutParams {
-        val recyclerViewLayoutParams = super.generateLayoutParams(lp)
-        return LayoutParams(recyclerViewLayoutParams)
-    }
-
-    override fun generateLayoutParams(c: Context, attrs: AttributeSet): RecyclerView.LayoutParams {
-        val recyclerViewLayoutParams = super.generateLayoutParams(c, attrs)
-        return LayoutParams(recyclerViewLayoutParams)
-    }
-
+        RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT)
 
     override fun onLayoutChildren(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
         detachAndScrapAttachedViews(recycler)
@@ -55,7 +38,6 @@ class CustomLayoutManager(
     }
 
     override fun canScrollVertically(): Boolean = true
-
 
     private var offset = 0
     override fun scrollVerticallyBy(
@@ -76,7 +58,6 @@ class CustomLayoutManager(
         }
         return lastOffset - offset
     }
-
 
     private fun fill(dy: Int, recycler: Recycler): Int {
         if (dy > 0) fillBottom(recycler, itemCount) else fillTop(recycler)
@@ -123,12 +104,10 @@ class CustomLayoutManager(
             val lastChildPosition = getPosition(lastChild)
             startPosition = lastChildPosition + 1
 
-
-
-            if ((lastChildPosition + 1) % columnCount == 0) {
-                verticalOffset = parentLeft
+            verticalOffset = if ((lastChildPosition + 1) % columnCount == 0) {
+                parentLeft
             } else {
-                verticalOffset = getDecoratedLeft(lastChild) + childPadding + viewSize
+                getDecoratedLeft(lastChild) + childPadding + viewSize
             }
 
             top = if ((lastChildPosition + 1) % columnCount == 0) {
@@ -176,12 +155,10 @@ class CustomLayoutManager(
         val firstVisibleChild = getChildAt(0)!!
         val firstVisibleChildPosition = getPosition(firstVisibleChild)
 
-        if (firstVisibleChildPosition == 0) return
-
         verticalOffset = if ((firstVisibleChildPosition + 1) % columnCount == 1) {
             parentRight - viewSize
         } else {
-            getDecoratedLeft(firstVisibleChild) - childPadding - viewSize
+            getDecoratedLeft(firstVisibleChild) - viewSize - childPadding
         }
 
         bottom = if ((firstVisibleChildPosition + 1) % columnCount == 1) {
@@ -189,7 +166,6 @@ class CustomLayoutManager(
         } else {
             getDecoratedBottom(firstVisibleChild) - viewSizeQuarter - childPadding
         }
-
 
         for (i in firstVisibleChildPosition - 1 downTo 0) {
             val view = recycler.getViewForPosition(i)
@@ -199,7 +175,7 @@ class CustomLayoutManager(
             top = bottom - viewSize
             layoutView(view, top, bottom, verticalOffset)
 
-            bottom = if ((firstVisibleChildPosition + 1) % columnCount == 1) {
+            bottom = if ((i + 1) % columnCount == 1) {
                 top + viewSizeQuarter * (columnCount - 1) - childPadding + childPadding * (columnCount - 1)
             } else {
                 bottom - viewSizeQuarter - childPadding
@@ -208,7 +184,7 @@ class CustomLayoutManager(
             if ((i + 1) % columnCount == 1) {
                 verticalOffset = parentRight - viewSize
             } else {
-                verticalOffset += childPadding + viewSize
+                verticalOffset -= viewSize + childPadding
             }
         }
     }
