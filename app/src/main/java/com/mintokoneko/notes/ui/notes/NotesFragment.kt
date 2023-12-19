@@ -1,10 +1,8 @@
 package com.mintokoneko.notes.ui.notes
 
-import CustomLayoutManager
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,13 +10,13 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.mintokoneko.notes.R
-import com.mintokoneko.notes.databinding.FragmentNotesBinding
 import com.mintokoneko.notes.data.Note
+import com.mintokoneko.notes.databinding.FragmentNotesBinding
+import com.mintokoneko.notes.ui.notes.layoutmanagers.CustomLayoutManager
 import com.mintokoneko.notes.ui.notes.noteitem.NoteItemFragment
 import com.mintokoneko.notes.utils.dpToPx
 import com.mintokoneko.notes.utils.getScreenWidthDp
 import java.io.File
-import kotlin.math.log
 
 class NotesFragment : Fragment() {
     private var _binding: FragmentNotesBinding? = null
@@ -41,7 +39,7 @@ class NotesFragment : Fragment() {
         val context = requireContext()
         val fragmentActivity = requireActivity()
         initRecyclers(context, fragmentActivity)
-       // initTempUri(context)
+        // initTempUri(context)
         addNotes()
     }
 
@@ -108,7 +106,11 @@ class NotesFragment : Fragment() {
         val notesRecycler = binding.notesRecycler
         notesRecycler.apply {
             adapter = noteAdapter
-            layoutManager = CustomLayoutManager(dpToPx(childSizeDp), columnsNum, CustomLayoutManager.Gravity.LEFT)
+            layoutManager = CustomLayoutManager(
+                dpToPx(childSizeDp),
+                dpToPx(16F),
+                columnsNum)
+
         }
     }
 
