@@ -1,9 +1,6 @@
 package com.mintokoneko.notes.ui.notes.layoutmanagers
 
-import android.content.Context
-import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Recycler
 
@@ -28,7 +25,7 @@ class CustomLayoutManager(
     private val viewSizeQuarter = viewSize / 4
 
     override fun generateDefaultLayoutParams(): RecyclerView.LayoutParams =
-        RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.WRAP_CONTENT)
+        RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT, RecyclerView.LayoutParams.MATCH_PARENT)
 
     override fun onLayoutChildren(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
         detachAndScrapAttachedViews(recycler)
@@ -97,32 +94,45 @@ class CustomLayoutManager(
         var bottom: Int
         var verticalOffset = parentLeft
 
+
+        val decoratedRight: Int
         val startPosition: Int
 
         if (childCount > 0) {
-            val lastChild = getChildAt(childCount - 1)!!
-            val lastChildPosition = getPosition(lastChild)
-            startPosition = lastChildPosition + 1
+            val lastVisibleChild = getChildAt(childCount - 1)!!
+            val lastVisibleChildPosition = getPosition(lastVisibleChild)
+            startPosition = lastVisibleChildPosition + 1
 
-            verticalOffset = if ((lastChildPosition + 1) % columnCount == 0) {
-                parentLeft
-            } else {
-                getDecoratedLeft(lastChild) + childPadding + viewSize
-            }
 
-            top = if ((lastChildPosition + 1) % columnCount == 0) {
-                getDecoratedBottom(lastChild) - viewSizeQuarter * (columnCount - 1) - childPadding * (columnCount - 1) + childPadding
+            decoratedRight = getDecoratedRight(lastVisibleChild)
+            if (decoratedRight > parentRight - childPadding) {
+                verticalOffset = parentLeft
+                top = getDecoratedBottom(lastVisibleChild) - viewSizeQuarter * (columnCount - 1) - childPadding * (columnCount - 1) + childPadding
             } else {
-                getDecoratedTop(lastChild) + childPadding + viewSizeQuarter
+                verticalOffset = getDecoratedLeft(lastVisibleChild) + childPadding + viewSize
+                top = getDecoratedTop(lastVisibleChild) + childPadding + viewSizeQuarter
             }
 
         } else {
-            startPosition = 0
-            top = parentTop
+            startPosition = - columnCount
+            top = parentTop - viewSize - childPadding
         }
 
-        for (i in startPosition until adapterItemCount) {
-            val view = recycler.getViewForPosition(i)
+        for (i in startPosition until adapterItemCount + columnCount) {
+            var pos = i
+
+            if (i < 0) {
+                pos = adapterItemCount + i
+            }
+
+            if (i >= adapterItemCount) {
+                pos = i % adapterItemCount
+            }
+
+
+            val view = recycler.getViewForPosition(pos)
+            view.layoutParams.width = viewSize
+            view.layoutParams.height = viewSize
             addView(view)
             view.measure()
 
@@ -130,17 +140,13 @@ class CustomLayoutManager(
 
             layoutView(view, top, bottom, verticalOffset)
 
-            if ((i + 1) % columnCount == 0) {
-                verticalOffset = childPadding
+            val decoratedRightOfView = getDecoratedRight(view)
+            if (decoratedRightOfView > parentRight - childPadding) {
+                verticalOffset = parentLeft
+                top = bottom - viewSizeQuarter * (columnCount - 1) - childPadding * (columnCount - 1) + childPadding
             } else {
                 verticalOffset += childPadding + viewSize
-            }
-
-
-            top = if ((i + 1) % columnCount == 0) {
-                bottom - viewSizeQuarter * (columnCount - 1) - childPadding * (columnCount - 1) + childPadding
-            } else {
-                top + viewSizeQuarter + childPadding
+                top += childPadding + viewSizeQuarter
             }
         }
     }
@@ -150,41 +156,44 @@ class CustomLayoutManager(
 
         var top: Int
         var bottom: Int
-        var verticalOffset: Int
+        val verticalOffset: Int
+
+        val decoratedLeft: Int
 
         val firstVisibleChild = getChildAt(0)!!
-        val firstVisibleChildPosition = getPosition(firstVisibleChild)
+        var firstVisibleChildPosition = getPosition(firstVisibleChild)
 
-        verticalOffset = if ((firstVisibleChildPosition + 1) % columnCount == 1) {
-            parentRight - viewSize
-        } else {
-            getDecoratedLeft(firstVisibleChild) - viewSize - childPadding
+        if (firstVisibleChildPosition == 0) {
+            firstVisibleChildPosition = itemCount
         }
 
-        bottom = if ((firstVisibleChildPosition + 1) % columnCount == 1) {
-            getDecoratedTop(firstVisibleChild) + viewSizeQuarter * (columnCount - 1) - childPadding + childPadding * (columnCount - 1)
+
+       decoratedLeft = getDecoratedLeft(firstVisibleChild)
+
+        if (decoratedLeft < parentLeft + childPadding) {
+            verticalOffset = parentRight - viewSize
+            bottom =  getDecoratedTop(firstVisibleChild) + viewSizeQuarter * (columnCount - 1) - childPadding + childPadding * (columnCount - 1)
         } else {
-            getDecoratedBottom(firstVisibleChild) - viewSizeQuarter - childPadding
+            verticalOffset = getDecoratedLeft(firstVisibleChild) - viewSize - childPadding
+            bottom = getDecoratedBottom(firstVisibleChild) - viewSizeQuarter - childPadding
         }
 
         for (i in firstVisibleChildPosition - 1 downTo 0) {
             val view = recycler.getViewForPosition(i)
             addView(view, 0)
+            view.layoutParams.height = viewSize
+            view.layoutParams.width = viewSize
             view.measure()
 
             top = bottom - viewSize
+            measureChild(view, viewSize, viewSize)
             layoutView(view, top, bottom, verticalOffset)
 
-            bottom = if ((i + 1) % columnCount == 1) {
+            val decoratedLeftOfView = getDecoratedLeft(view)
+            bottom = if (decoratedLeftOfView < parentLeft + childPadding) {
                 top + viewSizeQuarter * (columnCount - 1) - childPadding + childPadding * (columnCount - 1)
             } else {
                 bottom - viewSizeQuarter - childPadding
-            }
-
-            if ((i + 1) % columnCount == 1) {
-                verticalOffset = parentRight - viewSize
-            } else {
-                verticalOffset -= viewSize + childPadding
             }
         }
     }
@@ -193,11 +202,9 @@ class CustomLayoutManager(
         view: View,
         top: Int,
         bottom: Int,
-        vertical: Int = 100
+        vertical: Int = 200
     ) {
-
         val end = vertical + viewSize
-
         layoutDecorated(view, vertical, top, end, bottom)
     }
 

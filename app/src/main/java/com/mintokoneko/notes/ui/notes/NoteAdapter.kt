@@ -28,7 +28,7 @@ class NoteAdapter(
 
             binding.apply {
                 itemNoteCompactTitle.text = title
-                content?.let { itemNoteCompactContent.text = it }
+                //content?.let { itemNoteCompactContent.text = it }
             }
         }
     }
